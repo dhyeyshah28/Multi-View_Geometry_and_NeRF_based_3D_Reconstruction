@@ -12,15 +12,15 @@
 ## 📋 Table of Contents
 
 - [Overview](#-overview)
-- [3D Reconstruction using SfM](#-project-1-3d-reconstruction-from-two-views)
-  - [Technical Approach](#technical-approach-hw3)
-- [Project 2: Neural Radiance Fields](#-project-2-neural-radiance-fields-nerf)
-  - [Technical Approach](#technical-approach-hw5)
-  - [NeRF Architecture](#nerf-architecture)
+- [3D Reconstruction using SfM](#-3d-reconstruction-from-two-views)
+  - [Technical Approach](#technical-approach)
+  - [Key Algorithms](#key-algorithms-hw3)
+- [Neural Radiance Fields](#-neural-radiance-fields-nerf)
+  - [Technical Approach](#technical-approach)
+  - [Key Algorithms](#key-algorithms)
 - [Performance Results](#-performance-results) 
 - [Lessons Learned](#-lessons-learned)
 - [Future Improvements](#-future-improvements)
-- [References](#-references)
 - [Acknowledgments](#-acknowledgments)
 
 ---
@@ -1111,8 +1111,6 @@ T_i = Π[j=1 to i-1] (1 - α_j)
 
 ## 📚 Lessons Learned
 
-### Project 1: 3D Reconstruction
-
 #### ✅ What Worked Well
 
 1. **RANSAC Robustness**
@@ -1132,76 +1130,54 @@ T_i = Π[j=1 to i-1] (1 - α_j)
    - Each component (LSE, RANSAC, triangulation) independently testable
    - Easy to debug and iterate
 
-#### ⚠️ Challenges Encountered
-
-1. **Scale Ambiguity**
-   - Cannot recover absolute scale from two views
-   - All reconstructions up to unknown scale factor
-   - **Lesson**: Need known baseline or additional views for metric reconstruction
-
-2. **Feature Matching Quality**
-   - SIFT occasionally produced symmetric mismatches
-   - Ratio test (Lowe's criterion) would have helped
-   - **Improvement**: Add ratio test: `d1/d2 < 0.8`
-
-3. **Numerical Stability**
-   - Some point correspondences led to nearly singular systems
-   - **Solution**: Added regularization in least-squares
-
-4. **Outlier Sensitivity**
-   - Even with RANSAC, a few outliers remained
-   - **Improvement**: Iterative refinement after RANSAC
-
-### Project 2: Neural Radiance Fields
-
-#### ✅ What Worked Well
-
-1. **Positional Encoding Impact**
+5. **Positional Encoding Impact**
    - Dramatic improvement: 15dB → 26dB PSNR
    - Critical for representing fine details
    - L=6 sufficient for 2D images
 
-2. **Skip Connection**
+6. **Skip Connection**
    - Enabled deeper network (10 layers)
    - Preserved high-frequency information
    - Faster convergence
 
-3. **Stratified Sampling**
+7. **Stratified Sampling**
    - Better than uniform random sampling
    - More efficient use of network capacity
 
-4. **Adam Optimizer**
+8. **Adam Optimizer**
    - Faster than SGD for this problem
    - Learning rate 5e-4 worked well
 
 #### ⚠️ Challenges Encountered
 
-1. **Training Time**
+1. **Feature Matching Quality**
+   - SIFT occasionally produced symmetric mismatches
+   - Ratio test (Lowe's criterion) would have helped
+   - **Improvement**: Add ratio test: `d1/d2 < 0.8`
+
+2. **Numerical Stability**
+   - Some point correspondences led to nearly singular systems
+   - **Solution**: Added regularization in least-squares
+
+3. **Outlier Sensitivity**
+   - Even with RANSAC, a few outliers remained
+   - **Improvement**: Iterative refinement after RANSAC
+
+4. **Training Time**
    - 3000 iterations × 0.6s = ~30 minutes
    - Full quality (40dB) would require 100k+ iterations
    - **Lesson**: Trade-off between time and quality
 
-2. **Memory Constraints**
+5. **Memory Constraints**
    - Full image × 64 samples × network = OOM
    - **Solution**: Chunking (64k points at a time)
    - Still limits batch size to 1 image
-
-3. **View Dependence**
-   - Non-Lambertian effects hard to capture
-   - Only 4 frequencies for direction encoding
-   - **Improvement**: More direction frequencies or use SH
-
-4. **Floaters and Artifacts**
-   - Some "floating" density in empty space
-   - Caused by insufficient view coverage
-   - **Improvement**: More training views, regularization
-
 
 ---
 
 ## 🔮 Future Improvements
 
-### Project 1: 3D Reconstruction
+### 3D Reconstruction
 
 #### Short-Term
 
@@ -1237,11 +1213,7 @@ T_i = Π[j=1 to i-1] (1 - α_j)
    inliers = matches[confidence > threshold]
    ```
 
-3. **Neural Scene Representations**
-   - Combine geometric + learning approaches
-   - Use reconstruction to initialize NeRF
-
-### Project 2: NeRF
+### NeRF
 
 #### Short-Term
 
@@ -1293,34 +1265,6 @@ T_i = Π[j=1 to i-1] (1 - α_j)
    - Text-to-3D synthesis
    - Few-shot novel objects
 
-### Combined Approaches
-
-**Geometry-Guided NeRF:**
-
-```python
-# Use SfM poses to initialize NeRF training
-sfm_poses = run_colmap(images)
-
-# Constrain NeRF cameras to SfM solution
-for image, sfm_pose in zip(images, sfm_poses):
-    rendered = nerf(sfm_pose)
-    loss = mse_loss(rendered, image)
-```
-
-**NeRF-Enhanced Reconstruction:**
-
-```python
-# Use NeRF to densify sparse SfM points
-sparse_points = triangulate(matches, poses)
-
-# Query NeRF density at higher resolution
-dense_points = []
-for p in sparse_points:
-    for offset in neighborhood(p):
-        if nerf.density(p + offset) > threshold:
-            dense_points.append(p + offset)
-```
-
 ---
 
 ## 🙏 Acknowledgments
@@ -1339,7 +1283,7 @@ for p in sparse_points:
 ---
 <div align="center">
 
-[⬆ Back to Top](#-neural-rendering--3d-reconstruction-from-2d-images)
+[⬆ Back to Top](#-Multi-View_Geometry_and_NeRF_based_3D_Reconstruction)
 
 </div>
 
